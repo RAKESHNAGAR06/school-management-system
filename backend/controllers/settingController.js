@@ -1,7 +1,8 @@
 const SchoolSetting = require("../models/SchoolSetting");
 const User = require("../models/User");
-const fs = require("fs");
-const path = require("path");
+const cloudinary = require(
+  "../config/cloudinary"
+);
 
 const allowedSchoolSettingFields = [
   "schoolName",
@@ -325,7 +326,7 @@ const uploadSchoolLogo = async (
   req,
   res
 ) => {
-  let uploadedFilePath = null;
+  let newPublicId = null;
 
   try {
     if (!req.file) {
@@ -336,24 +337,10 @@ const uploadSchoolLogo = async (
       });
     }
 
-    uploadedFilePath =
-      req.file.path;
-
     const settings =
       await SchoolSetting.findOne();
 
     if (!settings) {
-      if (
-        uploadedFilePath &&
-        fs.existsSync(
-          uploadedFilePath
-        )
-      ) {
-        fs.unlinkSync(
-          uploadedFilePath
-        );
-      }
-
       return res.status(404).json({
         success: false,
         message:
@@ -361,48 +348,73 @@ const uploadSchoolLogo = async (
       });
     }
 
-    const oldLogo =
-      settings.logo;
+    const uploadResult =
+      await new Promise(
+        (resolve, reject) => {
+          const uploadStream =
+            cloudinary.uploader.upload_stream(
+              {
+                folder:
+                  "school-management/logos",
+
+                resource_type:
+                  "image",
+              },
+              (
+                error,
+                result
+              ) => {
+                if (error) {
+                  return reject(
+                    error
+                  );
+                }
+
+                resolve(result);
+              }
+            );
+
+          uploadStream.end(
+            req.file.buffer
+          );
+        }
+      );
+
+    newPublicId =
+      uploadResult.public_id;
+
+    const oldPublicId =
+      settings.logoPublicId;
 
     settings.logo =
-      `/uploads/${req.file.filename}`;
+      uploadResult.secure_url;
+
+    settings.logoPublicId =
+      uploadResult.public_id;
 
     await settings.save();
 
-    // Delete previous local logo only
-    // after the new logo is saved.
+    /*
+      New logo successfully saved in DB.
+      Now safely remove old Cloudinary logo.
+    */
     if (
-      oldLogo &&
-      oldLogo.startsWith(
-        "/uploads/"
-      )
+      oldPublicId &&
+      oldPublicId !==
+        uploadResult.public_id
     ) {
-      const oldFilename =
-        path.basename(oldLogo);
-
-      const oldFilePath =
-        path.join(
-          __dirname,
-          "../uploads",
-          oldFilename
+      try {
+        await cloudinary.uploader.destroy(
+          oldPublicId,
+          {
+            resource_type:
+              "image",
+          }
         );
-
-      if (
-        oldFilename !==
-          req.file.filename &&
-        fs.existsSync(
-          oldFilePath
-        )
-      ) {
-        try {
-          fs.unlinkSync(
-            oldFilePath
-          );
-        } catch (fileError) {
-          console.error(
-            "Old school logo cleanup failed"
-          );
-        }
+      } catch (error) {
+        console.error(
+          "Old school logo cleanup failed"
+        );
       }
     }
 
@@ -414,36 +426,51 @@ const uploadSchoolLogo = async (
     });
   } catch (error) {
     /*
-      If DB save/processing fails,
-      remove the newly uploaded orphan file.
+      Cloudinary upload succeeded but
+      database save failed:
+      remove newly uploaded orphan.
     */
-
-    if (
-      uploadedFilePath &&
-      fs.existsSync(
-        uploadedFilePath
-      )
-    ) {
+    if (newPublicId) {
       try {
-        fs.unlinkSync(
-          uploadedFilePath
+        await cloudinary.uploader.destroy(
+          newPublicId,
+          {
+            resource_type:
+              "image",
+          }
         );
-      } catch (fileError) {
+      } catch (
+        cleanupError
+      ) {
         console.error(
-          "Uploaded logo cleanup failed"
+          "New school logo cleanup failed"
         );
       }
     }
 
     console.error(
-      "School logo upload failed"
-    );
+  "School logo upload failed:",
+  {
+    message:
+      error?.message ||
+      "Unknown error",
 
-    return res.status(500).json({
-      success: false,
-      message:
-        "Unable to upload school logo",
-    });
+    name:
+      error?.name ||
+      "Unknown",
+
+    httpCode:
+      error?.http_code ||
+      error?.statusCode ||
+      null,
+  }
+);
+
+return res.status(500).json({
+  success: false,
+  message:
+    "Unable to upload school logo",
+});
   }
 };
 
