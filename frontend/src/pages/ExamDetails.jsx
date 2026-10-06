@@ -15,11 +15,12 @@ import {
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import apiRequest from "../utils/api";
+import { API_BASE_URL } from "../utils/api";
 
 function ExamDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const API = `http://localhost:5000/api/exams/${id}`;
+  const API = `${API_BASE_URL}/exams/${id}`;
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);

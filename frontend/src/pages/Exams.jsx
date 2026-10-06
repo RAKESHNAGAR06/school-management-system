@@ -28,7 +28,7 @@ function Exams() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
- // const API = "http://localhost:5000/api/exams";
+
 
   const fetchExams = async () => {
     try {

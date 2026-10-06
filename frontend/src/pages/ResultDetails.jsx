@@ -12,6 +12,8 @@ import {
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import apiRequest from "../utils/api";
+import { API_BASE_URL } from "../utils/api";
+
 
 function ResultDetails() {
   const { id } = useParams();
@@ -20,7 +22,7 @@ function ResultDetails() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API = `http://localhost:5000/api/results/${id}`;
+ const API = `${API_BASE_URL}/results/${id}`;
 
   useEffect(() => {
     const fetchResult = async () => {

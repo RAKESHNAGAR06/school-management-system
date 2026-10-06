@@ -21,6 +21,7 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import apiRequest from "../utils/api";
+import { API_BASE_URL, getFileUrl } from "../utils/api";
 
 
 function Sidebar() {
@@ -35,7 +36,7 @@ function Sidebar() {
 		  const fetchSchoolInfo = async () => {
 			try {
 			  const response = await fetch(
-				"http://localhost:5000/api/settings"
+				`${API_BASE_URL}/settings`
 			  );
 
 			  const data = await response.json();
@@ -221,7 +222,7 @@ function Sidebar() {
 		<div className="h-16 flex items-center px-4 border-b border-gray-200">
 		  {schoolInfo.logo ? (
 			<img
-			  src={`http://localhost:5000${schoolInfo.logo}`}
+			  src={getFileUrl(schoolInfo.logo)}
 			  alt="School Logo"
 			  className="w-10 h-10 rounded-lg border border-gray-200 object-cover"
 			/>

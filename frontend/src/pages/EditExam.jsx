@@ -4,11 +4,12 @@ import { ArrowLeft, Save, FileText } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import apiRequest from "../utils/api";
+import { API_BASE_URL } from "../utils/api";
 
 function EditExam() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const API = `http://localhost:5000/api/exams/${id}`;
+  const API = `${API_BASE_URL}/exams/${id}`;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);

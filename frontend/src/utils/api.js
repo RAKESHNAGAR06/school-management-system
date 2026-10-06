@@ -1,100 +1,47 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:5000/api";
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-const apiRequest = async (
-  endpoint,
-  options = {}
-) => {
-  const token =
-    localStorage.getItem("token");
+export const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
+export const getFileUrl = (fileUrl) => {
+  if (!fileUrl) return "";
+
+  if (
+    fileUrl.startsWith("http://") ||
+    fileUrl.startsWith("https://") ||
+    fileUrl.startsWith("data:")
+  ) {
+    return fileUrl;
+  }
+
+  return `${BACKEND_URL}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
+};
+
+export const apiRequest = async (endpoint, options = {}) => {
+  const token = localStorage.getItem("token");
 
   const headers = {
     ...(options.body instanceof FormData
       ? {}
-      : {
-          "Content-Type":
-            "application/json",
-        }),
-
-    ...(token
-      ? {
-          Authorization:
-            `Bearer ${token}`,
-        }
-      : {}),
-
+      : { "Content-Type": "application/json" }),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}${endpoint}`,
-      {
-        ...options,
-        headers,
-      }
-    );
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
 
-    // ========================================
-    // INVALID / EXPIRED SESSION
-    // ========================================
+  if (response.status === 401) {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-    if (response.status === 401) {
-      localStorage.removeItem(
-        "token"
-      );
-
-      localStorage.removeItem(
-        "user"
-      );
-
-      if (
-        window.location.pathname !==
-        "/login"
-      ) {
-        window.location.replace(
-          "/login"
-        );
-      }
-
-      throw new Error(
-        "Session expired. Please login again."
-      );
+    if (window.location.pathname !== "/login") {
+      window.location.href = "/login";
     }
-
-    /*
-      IMPORTANT:
-
-      403 ko yahan redirect nahi karna.
-
-      403 may mean:
-      - PASSWORD_CHANGE_REQUIRED
-      - inactive account
-      - role permission denied
-
-      Individual page / ProtectedRoute
-      correct behavior handle karega.
-    */
-
-    return response;
-  } catch (error) {
-    if (
-      error.message ===
-      "Session expired. Please login again."
-    ) {
-      throw error;
-    }
-
-    console.error(
-      "API request error:",
-      error
-    );
-
-    throw new Error(
-      "Unable to connect to server"
-    );
   }
-};
 
+  return response;
+};
 export default apiRequest;

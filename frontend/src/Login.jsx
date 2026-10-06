@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { School, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { API_BASE_URL } from "./utils/api";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -26,9 +27,7 @@ function Login() {
   setMessage("");
 
   try {
-    const response = await fetch(
-      "http://localhost:5000/api/auth/login",
-      {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
 
         headers: {

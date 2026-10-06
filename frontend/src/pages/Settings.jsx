@@ -5,6 +5,7 @@ import { School, Save, User } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import apiRequest from "../utils/api";
+import { getFileUrl } from "../utils/api";
 
 function Settings() {
   const [formData, setFormData] = useState({
@@ -54,7 +55,7 @@ function Settings() {
 			  affiliationNumber: data.data.affiliationNumber || "",
 			});
           if (data.data.logo) {
-            setLogoPreview(`http://localhost:5000${data.data.logo}`);
+            setLogoPreview(getFileUrl(data.data.logo));
           }
         }
 
@@ -168,7 +169,7 @@ function Settings() {
       const data = await response.json();
 
       if (data.success) {
-        setLogoPreview(`http://localhost:5000${data.data.logo}`);
+        setLogoPreview(getFileUrl(data.data.logo));
         setLogoFile(null);
         toast.success(data.message || "School logo uploaded successfully");
       } else {
