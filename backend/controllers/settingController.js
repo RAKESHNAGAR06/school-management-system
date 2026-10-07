@@ -448,23 +448,9 @@ const uploadSchoolLogo = async (
       }
     }
 
-    console.error(
-  "School logo upload failed:",
-  {
-    message:
-      error?.message ||
-      "Unknown error",
-
-    name:
-      error?.name ||
-      "Unknown",
-
-    httpCode:
-      error?.http_code ||
-      error?.statusCode ||
-      null,
-  }
-);
+if (process.env.NODE_ENV !== "production") {
+  console.error("School logo upload failed:", error.message);
+}
 
 return res.status(500).json({
   success: false,

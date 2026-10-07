@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
+
 const multer = require("multer");
 
 const connectDB = require("./config/db");
@@ -258,35 +258,7 @@ app.use(
     },
   })
 );
-app.use(
-  "/uploads",
-  express.static(
-    path.join(
-      __dirname,
-      "uploads"
-    ),
-    {
-      dotfiles: "deny",
 
-      fallthrough: false,
-
-      index: false,
-
-      maxAge:
-        process.env.NODE_ENV ===
-        "production"
-          ? "1d"
-          : 0,
-
-      setHeaders: (res) => {
-        res.setHeader(
-          "X-Content-Type-Options",
-          "nosniff"
-        );
-      },
-    }
-  )
-);
 app.use("/api", globalRateLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
