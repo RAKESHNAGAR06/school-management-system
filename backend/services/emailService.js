@@ -1,40 +1,22 @@
-const nodemailer = require(
-  "nodemailer"
-);
+const { Resend } = require("resend");
 
-const createTransporter = () => {
-  const host =
-    process.env.EMAIL_HOST ||
-    "smtp.gmail.com";
+const getResendClient = () => {
+  const apiKey = process.env.RESEND_API_KEY;
 
-  const port = Number(
-    process.env.EMAIL_PORT || 587
-  );
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass:
-        process.env.EMAIL_PASSWORD,
-    },
-  });
+  return new Resend(apiKey);
 };
 
-const verifyEmailConnection =
-  async () => {
-    const transporter =
-      createTransporter();
+const verifyEmailConnection = async () => {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
 
-    await transporter.verify();
-
-    console.log(
-      "Email server connected successfully"
-    );
-  };
+  console.log("Email API configured successfully");
+};
 
 const sendEmail = async ({
   to,
@@ -42,21 +24,34 @@ const sendEmail = async ({
   text,
   html,
 }) => {
-  const transporter =
-    createTransporter();
+  if (!to) {
+    throw new Error("Email recipient is required");
+  }
 
-  const info =
-    await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || "School Management System"}" <${process.env.EMAIL_USER}>`,
+  const resend = getResendClient();
+
+  const from =
+    process.env.EMAIL_FROM ||
+    "School Management System <onboarding@resend.dev>";
+
+  const { data, error } =
+    await resend.emails.send({
+      from,
       to,
       subject,
-      text,
-      html,
+      ...(text ? { text } : {}),
+      ...(html ? { html } : {}),
     });
+
+  if (error) {
+    throw new Error(
+      error.message || "Email sending failed"
+    );
+  }
 
   return {
     success: true,
-    messageId: info.messageId,
+    messageId: data?.id || null,
   };
 };
 

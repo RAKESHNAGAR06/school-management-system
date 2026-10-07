@@ -353,15 +353,13 @@ const startServer = async () => {
     // VERIFY OPTIONAL EMAIL SERVICE
     // ==========================================
 
-   try {
+ try {
   await verifyEmailConnection();
 } catch (error) {
-  console.error("Email server connection failed:", {
-    code: error?.code || null,
-    command: error?.command || null,
-    responseCode: error?.responseCode || null,
-    message: error?.message || "Unknown SMTP error",
-  });
+  console.error(
+    "Email API configuration failed:",
+    error?.message || "Unknown email error"
+  );
 }
 
     // ==========================================
