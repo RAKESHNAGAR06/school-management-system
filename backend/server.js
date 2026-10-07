@@ -353,13 +353,16 @@ const startServer = async () => {
     // VERIFY OPTIONAL EMAIL SERVICE
     // ==========================================
 
-    try {
-      await verifyEmailConnection();
-    } catch (error) {
-      console.error(
-        "Email server connection failed"
-      );
-    }
+   try {
+  await verifyEmailConnection();
+} catch (error) {
+  console.error("Email server connection failed:", {
+    code: error?.code || null,
+    command: error?.command || null,
+    responseCode: error?.responseCode || null,
+    message: error?.message || "Unknown SMTP error",
+  });
+}
 
     // ==========================================
     // START EXPRESS SERVER
